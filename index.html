@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AI EMI Calculator — GoCredit</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:transparent;color:#1e293b;-webkit-font-smoothing:antialiased}
+.widget{max-width:540px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column;height:100vh;max-height:700px}
+.header{background:linear-gradient(135deg,#6C5CE7,#a855f7);padding:14px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.header-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px}
+.header h2{color:#fff;font-size:15px;font-weight:700;flex:1}
+.header p{color:rgba(255,255,255,.7);font-size:10px;margin-top:1px}
+.mode-tabs{display:flex;border-bottom:1px solid #e2e8f0;flex-shrink:0}
+.mode-tab{flex:1;padding:10px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;border:none;background:#f8fafc;color:#64748b;transition:.2s}
+.mode-tab:hover{background:#f1f5f9}
+.mode-tab.active{background:#fff;color:#6C5CE7;box-shadow:inset 0 -2px 0 #6C5CE7}
+.panel{flex:1;overflow:hidden;display:none;flex-direction:column}
+.panel.active{display:flex}
+
+/* === SLIDER PANEL === */
+.slider-body{padding:16px 20px;overflow-y:auto;flex:1}
+.tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.tab{padding:5px 10px;border-radius:7px;font-size:10px;font-weight:600;border:none;cursor:pointer;transition:.2s;background:#f1f5f9;color:#64748b}
+.tab:hover{background:#e2e8f0}
+.tab.active{background:#6C5CE7;color:#fff}
+.field{margin-bottom:14px}
+.field-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.field-label{font-size:12px;font-weight:600;color:#475569}
+.field-value{background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:3px 8px;font-size:12px;font-weight:700;color:#1e293b}
+input[type=range]{width:100%;height:6px;border-radius:3px;appearance:none;background:#e2e8f0;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#6C5CE7;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:grab}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#6C5CE7;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:grab}
+.range-labels{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;margin-top:3px}
+.results{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:10px;padding:14px;margin-bottom:10px}
+.results-inner{display:flex;align-items:center;gap:14px}
+.pie{width:72px;height:72px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 4px rgba(0,0,0,.1)}
+.pie-center{width:42px;height:42px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#475569}
+.emi-label{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.emi-value{font-size:22px;font-weight:900;color:#1e293b;margin:1px 0 6px}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sub-label{font-size:9px;color:#64748b}
+.sub-value{font-size:12px;font-weight:700}
+.sub-value.interest{color:#f59e0b}
+.sub-value.total{color:#1e293b}
+.legend{display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:#64748b}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+.legend-dot.principal{background:#6C5CE7}
+.legend-dot.int{background:#f59e0b}
+.amort-btn{width:100%;padding:8px;background:none;border:none;color:#6C5CE7;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s}
+.amort-btn:hover{color:#5b4bd4}
+.amort-btn svg{transition:.2s}
+.amort-btn.open svg{transform:rotate(180deg)}
+.amort-table{max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;display:none}
+.amort-table.show{display:block}
+.amort-table table{width:100%;font-size:10px;border-collapse:collapse}
+.amort-table th{background:#f8fafc;padding:6px 8px;text-align:right;font-weight:600;color:#64748b;position:sticky;top:0}
+.amort-table th:first-child{text-align:left}
+.amort-table td{padding:5px 8px;text-align:right;border-top:1px solid #f1f5f9;color:#475569}
+.amort-table td:first-child{text-align:left;font-weight:500;color:#1e293b}
+.amort-table td.p{color:#6C5CE7;font-weight:500}
+.amort-table td.i{color:#f59e0b}
+
+/* === CHAT PANEL === */
+.chat-area{flex:1;overflow-y:auto;padding:12px 16px;background:#fafbfc}
+.chat-area::-webkit-scrollbar{width:4px}
+.chat-area::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+.msg{margin-bottom:12px;display:flex}
+.msg.user{justify-content:flex-end}
+.msg-bubble{max-width:85%;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.5}
+.msg.user .msg-bubble{background:#6C5CE7;color:#fff;border-bottom-right-radius:4px}
+.msg.ai{gap:8px}
+.msg.ai .msg-bubble{background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ai-avatar{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#6C5CE7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.stat-card{border-radius:8px;padding:8px;border:1px solid #e2e8f0;background:#f8fafc}
+.stat-card.accent{background:#6C5CE7/10;border-color:rgba(108,92,231,.2);background:rgba(108,92,231,.06)}
+.stat-val{font-size:15px;font-weight:800;color:#1e293b}
+.stat-card.accent .stat-val{color:#6C5CE7}
+.stat-lbl{font-size:9px;color:#64748b;font-weight:500;margin-top:2px}
+.hint-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;font-size:11px;color:#15803d;margin-top:6px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.compare-card{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#f8fafc}
+.compare-card.winner{border-color:#86efac;background:#f0fdf4}
+.compare-title{font-size:10px;font-weight:700;color:#475569;margin-bottom:4px}
+.compare-emi{font-size:16px;font-weight:900;color:#1e293b}
+.compare-sub{font-size:10px;color:#64748b;margin-top:2px}
+.bar{height:8px;border-radius:4px;background:#e2e8f0;overflow:hidden;display:flex;margin:6px 0}
+.bar-p{background:#6C5CE7;border-radius:4px 0 0 4px}
+.bar-i{background:#f59e0b;border-radius:0 4px 4px 0}
+.bar-legend{display:flex;justify-content:space-between;font-size:9px;color:#94a3b8}
+.quick-actions{padding:8px 16px;border-top:1px solid #f1f5f9;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;background:#fff}
+.quick-actions::-webkit-scrollbar{height:0}
+.qa-btn{font-size:10px;font-weight:500;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:5px 10px;white-space:nowrap;cursor:pointer;transition:.2s}
+.qa-btn:hover{background:rgba(108,92,231,.05);color:#6C5CE7;border-color:rgba(108,92,231,.3)}
+.chat-input{padding:10px 16px;border-top:1px solid #e2e8f0;background:#fff;display:flex;gap:8px;flex-shrink:0}
+.chat-input input{flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:13px;color:#1e293b;outline:none}
+.chat-input input:focus{border-color:#6C5CE7}
+.chat-input input::placeholder{color:#94a3b8}
+.chat-input button{background:#6C5CE7;color:#fff;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;transition:.2s;flex-shrink:0}
+.chat-input button:hover{background:#5b4bd4}
+.chat-input button:disabled{opacity:.4;cursor:default}
+.pre{white-space:pre-line}
+
+/* === FOOTER === */
+.footer{background:#f8fafc;border-top:1px solid #e2e8f0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.footer a{text-decoration:none;display:flex;align-items:center;gap:6px;font-size:10px;color:#64748b;transition:.2s}
+.footer a:hover{color:#6C5CE7}
+.footer a strong{color:#475569}
+.footer .get-widget{font-size:9px;color:#6C5CE7;font-weight:600;text-decoration:none}
+.footer .get-widget:hover{text-decoration:underline}
+.footer img{width:16px;height:16px;border-radius:3px}
+@media(max-width:480px){
+  .widget{max-height:none;height:auto;min-height:100vh;border-radius:0;box-shadow:none;border:none}
+  .header{padding:12px 16px}
+  .header h2{font-size:14px}
+  .slider-body{padding:14px 16px}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .stat-grid>:last-child{grid-column:span 2}
+  .stat-val{font-size:13px}
+  .compare-grid{grid-template-columns:1fr}
+  .results-inner{flex-direction:column;align-items:stretch;gap:10px}
+  .pie{width:60px;height:60px;margin:0 auto}
+  .pie-center{width:36px;height:36px;font-size:8px}
+  .emi-value{font-size:20px;text-align:center}
+  .emi-label{text-align:center}
+  .sub-grid{text-align:center}
+  .legend{justify-content:center}
+  .tabs{gap:4px}
+  .tab{padding:4px 8px;font-size:9px}
+  .msg-bubble{font-size:12px;padding:8px 12px}
+  .qa-btn{font-size:9px;padding:4px 8px}
+}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="header">
+    <div class="header-icon">🤖</div>
+    <div>
+      <h2>AI EMI Calculator</h2>
+      <p>Calculator + AI Chat · Powered by GoCredit</p>
+    </div>
+  </div>
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('slider')">🧮 Calculator</button>
+    <button class="mode-tab" onclick="switchMode('chat')">💬 AI Chat</button>
+  </div>
+
+  <!-- SLIDER PANEL -->
+  <div class="panel active" id="sliderPanel">
+    <div class="slider-body">
+      <div class="tabs" id="tabs"></div>
+      <div class="field">
+        <div class="field-header"><span class="field-label">Loan Amount</span><span class="field-value" id="amtDisplay"></span></div>
+        <input type="range" id="amtSlider" min="10000" max="2500000" step="5000" value="300000">
+        <div class="range-labels"><span id="amtMin">₹10K</span><span id="amtMax">₹25L</span></div>
+      </div>
+      <div class="field">
+        <div class="field-header"><span class="field-label">Interest Rate (p.a.)</span><span class="field-value" id="rateDisplay"></span></div>
+        <input type="range" id="rateSlider" min="7" max="36" step="0.25" value="14">
+        <div class="range-labels"><span id="rateMin">7%</span><span id="rateMax">36%</span></div>
+      </div>
+      <div class="field">
+        <div class="field-header"><span class="field-label">Tenure</span><span class="field-value" id="tenureDisplay"></span></div>
+        <input type="range" id="tenureSlider" min="3" max="84" step="3" value="36">
+        <div class="range-labels"><span id="tenureMin">3m</span><span id="tenureMax">7y</span></div>
+      </div>
+      <div class="results">
+        <div class="results-inner">
+          <div class="pie" id="pie"><div class="pie-center">EMI</div></div>
+          <div>
+            <div class="emi-label">Monthly EMI</div>
+            <div class="emi-value" id="emiValue"></div>
+            <div class="sub-grid">
+              <div><div class="sub-label">Total Interest</div><div class="sub-value interest" id="intValue"></div></div>
+              <div><div class="sub-label">Total Payment</div><div class="sub-value total" id="totalValue"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot principal"></span><span id="pctPrincipal">Principal</span></div>
+          <div class="legend-item"><span class="legend-dot int"></span><span id="pctInterest">Interest</span></div>
+        </div>
+      </div>
+      <button class="amort-btn" id="amortBtn" onclick="toggleAmort()">View Amortization Schedule <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+      <div class="amort-table" id="amortTable"><table><thead><tr><th>Month</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody id="amortBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="panel" id="chatPanel">
+    <div class="chat-area" id="chatArea"></div>
+    <div class="quick-actions" id="quickActions">
+      <button class="qa-btn" onclick="chatSend('5 lakh loan at 14% for 3 years')">💰 Personal Loan</button>
+      <button class="qa-btn" onclick="chatSend('30 lakh home loan at 8.5% for 20 years')">🏠 Home Loan</button>
+      <button class="qa-btn" onclick="chatSend('FD 5 lakh at 7.25% for 3 years')">🏦 FD Returns</button>
+      <button class="qa-btn" onclick="chatSend('SIP 5000 monthly at 12% for 10 years')">📈 SIP Growth</button>
+      <button class="qa-btn" onclick="chatSend('How much loan on 40000 salary')">💼 Max Loan</button>
+      <button class="qa-btn" onclick="chatSend('Compare 10.5% vs 14% on 5 lakh for 3 years')">⚖️ Compare</button>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Ask: 5 lakh loan at 12% for 3 years..." onkeydown="if(event.key==='Enter')chatSend()">
+      <button onclick="chatSend()">→</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://gocredit.money/emi-calculator-widget?utm_source=embed&utm_medium=widget" target="_blank" rel="noopener">
+      <img src="https://gocredit.money/logo-ai.png" alt="GoCredit">
+      <span>Powered by <strong>GoCredit</strong></span>
+    </a>
+    <a class="get-widget" href="https://gocredit.money/emi-calculator-widget?utm_source=embed&utm_medium=widget" target="_blank" rel="noopener">Get this free →</a>
+  </div>
+</div>
+
+<script>
+// ─── CALC ENGINE ───
+const RATES={personal_loan:{min:10.49,typical:14,max:36,tenure:36},home_loan:{min:8.35,typical:9,max:12,tenure:240},car_loan:{min:8.5,typical:10,max:16,tenure:60},education_loan:{min:8,typical:10.5,max:15,tenure:84},lap:{min:8,typical:10,max:14,tenure:180},gold_loan:{min:7,typical:10,max:18,tenure:24},two_wheeler:{min:9,typical:14,max:24,tenure:36},fd:{min:5.5,typical:7.25,max:9,tenure_years:3},rd:{min:5.5,typical:7,max:8.5,tenure:36},sip:{min:10,typical:12,max:15,tenure_years:10}};
+
+function calcEMI(P,R,N){const r=R/12/100;if(r===0)return Math.round(P/N);return Math.round(P*r*Math.pow(1+r,N)/(Math.pow(1+r,N)-1));}
+function emiBd(P,R,N){const e=calcEMI(P,R,N),t=e*N,i=t-P;return{emi:e,principal:P,rate:R,tenure:N,totalInterest:i,totalPayment:t,intPct:Math.round(i/P*100)};}
+function maxLoan(emiBudget,R,N){const r=R/12/100;if(r===0)return emiBudget*N;return Math.round(emiBudget*(Math.pow(1+r,N)-1)/(r*Math.pow(1+r,N)));}
+function fdMat(P,R,Y){const m=Math.round(P*Math.pow(1+R/100/4,4*Y));return{principal:P,rate:R,years:Y,maturity:m,interest:m-P,effRate:Math.round(((m/P)**(1/Y)-1)*10000)/100};}
+function rdMat(D,R,M){const r=R/100/4;let m=0;for(let i=0;i<M;i++)m+=D*Math.pow(1+r,(M-i)/3);m=Math.round(m);return{deposit:D,rate:R,months:M,totalDep:D*M,interest:m-D*M,maturity:m};}
+function sipRet(S,R,Y){const r=R/12/100,n=Y*12,fv=Math.round(S*((Math.pow(1+r,n)-1)/r)*(1+r));return{sip:S,rate:R,years:Y,invested:S*n,returns:fv-S*n,value:fv,mult:Math.round(fv/(S*n)*100)/100};}
+function afford(sal,R,N){const maxE=Math.round(sal*.5),ml=maxLoan(maxE,R,N);return{salary:sal,maxEMI:maxE,maxLoan:ml,rate:R,tenure:N};}
+function compareLn(a,b){const ra=emiBd(a.P,a.R,a.N),rb=emiBd(b.P,b.R,b.N);return{a:{...ra,label:a.label},b:{...rb,label:b.label},cheaper:ra.totalInterest<rb.totalInterest?'a':rb.totalInterest<ra.totalInterest?'b':'equal',savings:Math.abs(ra.totalInterest-rb.totalInterest)};}
+function prepay(P,R,N,amt,after){const emi=calcEMI(P,R,N),r=R/12/100;let bal=P;for(let m=1;m<=after;m++){bal-=(emi-bal*r);}const nb=Math.max(0,bal-amt);let nt=0;if(nb>0&&r>0)nt=Math.ceil(Math.log(emi/(emi-nb*r))/Math.log(1+r));const saved=emi*N-(emi*after+amt+emi*nt);return{emi,origTenure:N,prepay:amt,after,newTenure:after+nt,monthsSaved:Math.max(0,N-after-nt),interestSaved:Math.max(0,Math.round(saved))};}
+
+const fmt=n=>{if(n>=1e7)return'\u20B9'+(n/1e7).toFixed(2)+' Cr';if(n>=1e5)return'\u20B9'+(n/1e5).toFixed(2)+' L';return'\u20B9'+Math.round(n).toLocaleString('en-IN')};
+const fmtS=n=>{if(n>=1e7)return'\u20B9'+(n/1e7).toFixed(1)+'Cr';if(n>=1e5)return'\u20B9'+(n/1e5).toFixed(1)+'L';if(n>=1e3)return'\u20B9'+(n/1e3).toFixed(0)+'K';return'\u20B9'+Math.round(n)};
+const fmtT=m=>{if(m>=12){const y=Math.floor(m/12),r=m%12;return y+'y'+(r?' '+r+'m':'');}return m+'m';};
+
+// ─── NLP PARSER ───
+function parseAmt(t){t=t.replace(/,/g,'').replace(/\u20B9/g,'').trim();let m;if(m=t.match(/([\.\d]+)\s*(?:cr|crore)/i))return parseFloat(m[1])*1e7;if(m=t.match(/([\.\d]+)\s*(?:l|lk|lakh|lakhs|lac)/i))return parseFloat(m[1])*1e5;if(m=t.match(/([\.\d]+)\s*(?:k|thousand)/i))return parseFloat(m[1])*1e3;if(m=t.match(/(\d+)/)){const n=parseInt(m[1]);return n<=100?n*1e5:n;}return null;}
+function parseRate(t){let m;if(m=t.match(/([\.\d]+)\s*%/))return parseFloat(m[1]);if(m=t.match(/at\s+([\.\d]+)\s*(?:percent|%|p\.?a\.?)?/i))return parseFloat(m[1]);return null;}
+function parseTenure(t){let m;if(m=t.match(/(\d+)\s*(?:month|months|mo)/i))return parseInt(m[1]);if(m=t.match(/(\d+)\s*(?:year|years|yr)/i))return parseInt(m[1])*12;return null;}
+function parseSalary(t){let m;if(m=t.match(/(?:salary|income|earn|kamata)[\s:is]*(?:\u20B9)?\s*([\.\d,]+\s*(?:k|l|lakh|thousand)?)/i))return parseAmt(m[1]);if(m=t.match(/(?:on|with)\s*(?:\u20B9)?\s*([\.\d,]+\s*(?:k|l|lakh)?)\s*(?:salary|income)/i))return parseAmt(m[1]);if(m=t.match(/(?:\u20B9)?\s*([\.\d,]+\s*(?:k|l|lakh)?)\s*(?:salary|income)/i))return parseAmt(m[1]);return null;}
+function detectType(t){t=t.toLowerCase();if(/home\s*loan|housing|ghar|property\s*loan/.test(t))return'home_loan';if(/car\s*loan|auto|vehicle|gaadi/.test(t))return'car_loan';if(/two\s*wheeler|bike|scooter/.test(t))return'two_wheeler';if(/education|study|student|padhai/.test(t))return'education_loan';if(/gold|sona|jewel/.test(t))return'gold_loan';if(/lap\b|loan\s*against\s*property/.test(t))return'lap';return'personal_loan';}
+
+function parseQuery(text){
+  const t=text.toLowerCase().trim();
+  if(/^(hi|hello|hey|namaste|hii+)\s*!?$/.test(t))return{intent:'greeting'};
+  if(/^(help|what can you|features)/.test(t))return{intent:'help'};
+  if(/\b(fd|fixed\s*deposit)\b/i.test(t)){const p=parseAmt(t.replace(/fd|fixed\s*deposit/gi,''));const r=parseRate(t);const tn=parseTenure(t);return{intent:'fd',params:{P:p||100000,R:r||RATES.fd.typical,Y:tn?tn/12:RATES.fd.tenure_years}};}
+  if(/\b(rd|recurring\s*deposit)\b/i.test(t)){const p=parseAmt(t.replace(/rd|recurring\s*deposit/gi,''));const r=parseRate(t);const tn=parseTenure(t);return{intent:'rd',params:{D:p||5000,R:r||RATES.rd.typical,M:tn||RATES.rd.tenure}};}
+  if(/\b(sip|mutual\s*fund)\b/i.test(t)){const p=parseAmt(t.replace(/sip|mutual\s*fund/gi,''));const r=parseRate(t);const tn=parseTenure(t);return{intent:'sip',params:{S:p||5000,R:r||RATES.sip.typical,Y:tn?tn/12:RATES.sip.tenure_years}};}
+  if(/\b(prepay|pre-pay|part\s*pay)\b/i.test(t)){const amts=[];let m;const re=/(?:\u20B9)?\s*([\.\d,]+\s*(?:k|l|lakh|cr|crore)?)/gi;while(m=re.exec(t)){const v=parseAmt(m[1]);if(v&&v>0)amts.push(v);}const r=parseRate(t);const tn=parseTenure(t);const lt=detectType(t);const d=RATES[lt];return{intent:'prepay',params:{P:amts[0]||500000,amt:amts[1]||(amts[0]?Math.round(amts[0]*.1):50000),R:r||d.typical,N:tn||d.tenure}};}
+  if(/\b(compare|vs|versus|which.*better)\b/i.test(t)){const rates=[];let m;const re=/([\.\d]+)\s*%/g;while(m=re.exec(t))rates.push(parseFloat(m[1]));const tenures=[];const re2=/(\d+)\s*(?:year|yr|month)/gi;while(m=re2.exec(t)){const v=parseInt(m[1]);tenures.push(/year|yr/i.test(m[0])?v*12:v);}const p=parseAmt(t)||500000;const lt=detectType(t);const d=RATES[lt];if(rates.length>=2)return{intent:'compare',params:{a:{P:p,R:rates[0],N:tenures[0]||d.tenure,label:rates[0]+'%'},b:{P:p,R:rates[1],N:tenures[1]||tenures[0]||d.tenure,label:rates[1]+'%'}}};if(tenures.length>=2){const r=rates[0]||d.typical;return{intent:'compare',params:{a:{P:p,R:r,N:tenures[0],label:fmtT(tenures[0])},b:{P:p,R:r,N:tenures[1],label:fmtT(tenures[1])}}};}return{intent:'compare_help'};}
+  if(/\b(afford|how\s*much.*loan|max.*loan|eligib|salary|income|kamata|kitna\s*mil)\b/i.test(t)){const sal=parseSalary(t)||parseAmt(t);const r=parseRate(t);const tn=parseTenure(t);const lt=detectType(t);const d=RATES[lt];if(sal&&sal<=1e6)return{intent:'afford',params:{sal,R:r||d.typical,N:tn||d.tenure,lt}};}
+  const amount=parseAmt(t),rate=parseRate(t),tenure=parseTenure(t),lt=detectType(t),d=RATES[lt];
+  if(amount||rate||tenure)return{intent:'emi',params:{P:amount||500000,R:rate||d.typical,N:tenure||d.tenure,lt}};
+  return{intent:'unknown'};
+}
+
+// ─── MODE SWITCHING ───
+function switchMode(mode){
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',i===(mode==='slider'?0:1)));
+  document.getElementById('sliderPanel').classList.toggle('active',mode==='slider');
+  document.getElementById('chatPanel').classList.toggle('active',mode==='chat');
+  if(mode==='chat'&&!chatInit){initChat();chatInit=true;}
+}
+
+// ─── SLIDER CALCULATOR ───
+const LOANS=[
+  {id:'personal',label:'Personal',minRate:10.49,rate:14,maxRate:36,amt:300000,maxAmt:2500000,tenure:36,maxTenure:84,step:5000},
+  {id:'home',label:'Home',minRate:8.35,rate:9,maxRate:14,amt:3000000,maxAmt:50000000,tenure:240,maxTenure:360,step:50000},
+  {id:'car',label:'Car',minRate:8.5,rate:9.5,maxRate:16,amt:800000,maxAmt:10000000,tenure:60,maxTenure:84,step:25000},
+  {id:'education',label:'Education',minRate:8,rate:10.5,maxRate:15,amt:500000,maxAmt:7500000,tenure:84,maxTenure:180,step:25000},
+  {id:'gold',label:'Gold',minRate:7,rate:9,maxRate:18,amt:200000,maxAmt:5000000,tenure:24,maxTenure:60,step:10000},
+  {id:'two_wheeler',label:'2-Wheeler',minRate:9,rate:12,maxRate:24,amt:80000,maxAmt:300000,tenure:24,maxTenure:48,step:5000}
+];
+let cur=0;
+const $=id=>document.getElementById(id);
+function buildTabs(){const t=$('tabs');t.innerHTML='';LOANS.forEach((l,i)=>{const b=document.createElement('button');b.className='tab'+(i===cur?' active':'');b.textContent=l.label;b.onclick=()=>{cur=i;initSlider();};t.appendChild(b);});}
+function initSlider(){const l=LOANS[cur];$('amtSlider').min=10000;$('amtSlider').max=l.maxAmt;$('amtSlider').step=l.step;$('amtSlider').value=l.amt;$('rateSlider').min=l.minRate;$('rateSlider').max=l.maxRate;$('rateSlider').value=l.rate;$('tenureSlider').min=3;$('tenureSlider').max=l.maxTenure;$('tenureSlider').step=l.maxTenure>120?12:3;$('tenureSlider').value=l.tenure;$('amtMin').textContent='\u20B910K';$('amtMax').textContent=fmtS(l.maxAmt);$('rateMin').textContent=l.minRate+'%';$('rateMax').textContent=l.maxRate+'%';$('tenureMin').textContent='3m';$('tenureMax').textContent=fmtT(l.maxTenure);$('amortTable').classList.remove('show');$('amortBtn').classList.remove('open');buildTabs();calcSlider();}
+function calcSlider(){const P=+$('amtSlider').value,R=+$('rateSlider').value,N=+$('tenureSlider').value;$('amtDisplay').textContent=fmt(P);$('rateDisplay').textContent=R+'%';$('tenureDisplay').textContent=fmtT(N);const r=R/12/100,emi=R===0?P/N:(P*r*Math.pow(1+r,N))/(Math.pow(1+r,N)-1),total=emi*N,interest=total-P,pPct=((P/total)*100).toFixed(0);$('emiValue').textContent=fmt(emi);$('intValue').textContent=fmt(interest);$('totalValue').textContent=fmt(total);$('pctPrincipal').textContent='Principal ('+pPct+'%)';$('pctInterest').textContent='Interest ('+(100-pPct)+'%)';$('pie').style.background='conic-gradient(#6C5CE7 0deg '+((P/total)*360).toFixed(0)+'deg, #f59e0b '+((P/total)*360).toFixed(0)+'deg 360deg)';let bal=P;const tbody=$('amortBody');tbody.innerHTML='';for(let m=1;m<=N;m++){const ip=bal*r,pp=emi-ip;bal=Math.max(0,bal-pp);tbody.innerHTML+='<tr><td>'+m+'</td><td>'+fmt(emi)+'</td><td class=p>'+fmt(pp)+'</td><td class=i>'+fmt(ip)+'</td><td>'+fmt(bal)+'</td></tr>';}}
+function toggleAmort(){const t=$('amortTable'),b=$('amortBtn');const s=!t.classList.contains('show');t.classList.toggle('show');b.classList.toggle('open');b.innerHTML=(s?'Hide':'View')+' Amortization Schedule <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';}
+$('amtSlider').oninput=calcSlider;$('rateSlider').oninput=calcSlider;$('tenureSlider').oninput=calcSlider;
+initSlider();
+
+// ─── AI CHAT ───
+let chatInit=false;
+let msgCount=0;
+function initChat(){addAI("Hi! I'm GoCredit's <b>AI EMI Calculator</b>. Ask me anything!\n\nTry: <i>\"5 lakh loan at 12% for 3 years\"</i>\nor tap a quick action below.");}
+function addUser(text){const d=document.createElement('div');d.className='msg user';d.innerHTML='<div class="msg-bubble">'+esc(text)+'</div>';$('chatArea').appendChild(d);scroll();}
+function addAI(html){const d=document.createElement('div');d.className='msg ai';d.innerHTML='<div class="ai-avatar">🤖</div><div class="msg-bubble">'+html+'</div>';$('chatArea').appendChild(d);scroll();}
+function scroll(){const c=$('chatArea');c.scrollTop=c.scrollHeight;}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function chatSend(text){
+  const q=(text||$('chatInput').value).trim();if(!q)return;
+  $('chatInput').value='';
+  addUser(q);
+  msgCount++;
+  if(msgCount>1)$('quickActions').style.display='none';
+  const p=parseQuery(q);
+  let html='';
+  switch(p.intent){
+    case'greeting':html="Hi there! Ask me any loan, FD, SIP, or EMI question. For example: <i>\"5 lakh at 12% for 3 years\"</i>";break;
+    case'help':html="I can calculate:\n• <b>Loan EMI</b> — Personal, Home, Car, Education, Gold\n• <b>FD / RD</b> returns\n• <b>SIP</b> growth projection\n• <b>Loan affordability</b> from your salary\n• <b>Compare</b> two loan options\n• <b>Prepayment</b> impact\n\nJust type naturally!";break;
+    case'emi':{const r=emiBd(p.params.P,p.params.R,p.params.N);const lt=p.params.lt.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());const iPct=Math.round(r.totalInterest/r.totalPayment*100);const best=RATES[p.params.lt];const bestR=best.min;const show=p.params.R>bestR;html='<div style="font-size:10px;font-weight:700;color:#6C5CE7;text-transform:uppercase;letter-spacing:.5px">'+lt+' EMI Breakdown</div><div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+fmt(r.emi)+'</div><div class="stat-lbl">Monthly EMI</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.totalInterest)+'</div><div class="stat-lbl">Total Interest</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.totalPayment)+'</div><div class="stat-lbl">Total Payment</div></div></div><div class="bar"><div class="bar-p" style="width:'+(100-iPct)+'%"></div><div class="bar-i" style="width:'+iPct+'%"></div></div><div class="bar-legend"><span>Principal: '+fmt(r.principal)+'</span><span>Interest: '+fmt(r.totalInterest)+'</span></div>';if(show){const be=emiBd(p.params.P,bestR,p.params.N);html+='<div class="hint-box">💡 Best rate on GoCredit: '+bestR+'% — EMI drops to '+fmt(be.emi)+', saving '+fmt(r.totalInterest-be.totalInterest)+' total</div>';}break;}
+    case'fd':{const r=fdMat(p.params.P,p.params.R,p.params.Y);html='<div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.5px">Fixed Deposit Returns</div><div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+fmt(r.maturity)+'</div><div class="stat-lbl">Maturity Amount</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.interest)+'</div><div class="stat-lbl">Interest Earned</div></div><div class="stat-card"><div class="stat-val">'+r.effRate+'%</div><div class="stat-lbl">Effective Rate</div></div></div><div style="font-size:11px;color:#64748b">'+fmt(r.principal)+' at '+r.rate+'% for '+r.years+' year'+(r.years>1?'s':'')+' (quarterly compounding)</div>';break;}
+    case'rd':{const r=rdMat(p.params.D,p.params.R,p.params.M);html='<div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Recurring Deposit</div><div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+fmt(r.maturity)+'</div><div class="stat-lbl">Maturity</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.totalDep)+'</div><div class="stat-lbl">Deposited</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.interest)+'</div><div class="stat-lbl">Interest</div></div></div>';break;}
+    case'sip':{const r=sipRet(p.params.S,p.params.R,p.params.Y);html='<div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px">SIP Growth</div><div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+fmt(r.value)+'</div><div class="stat-lbl">Future Value</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.invested)+'</div><div class="stat-lbl">Invested</div></div><div class="stat-card"><div class="stat-val">'+r.mult+'x</div><div class="stat-lbl">Growth</div></div></div><div style="font-size:11px;color:#64748b">'+fmt(r.sip)+'/month at '+r.rate+'% for '+r.years+' years</div>';break;}
+    case'afford':{const r=afford(p.params.sal,p.params.R,p.params.N);html='<div style="font-size:10px;font-weight:700;color:#6C5CE7;text-transform:uppercase;letter-spacing:.5px">Loan Affordability</div><div class="stat-grid"><div class="stat-card"><div class="stat-val">'+fmt(r.salary)+'</div><div class="stat-lbl">Your Salary</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.maxEMI)+'</div><div class="stat-lbl">Max EMI (50%)</div></div><div class="stat-card accent"><div class="stat-val">'+fmt(r.maxLoan)+'</div><div class="stat-lbl">Max Loan</div></div></div><div class="hint-box">💡 GoCredit checks eligibility across 100+ lenders for your exact profile</div>';break;}
+    case'compare':{const r=compareLn(p.params.a,p.params.b);html='<div style="font-size:10px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.5px">Loan Comparison</div><div class="compare-grid"><div class="compare-card'+(r.cheaper==='a'?' winner':'')+'"><div class="compare-title">'+r.a.label+(r.cheaper==='a'?' ✅':'')+'</div><div class="compare-emi">'+fmt(r.a.emi)+'<span style="font-size:10px;font-weight:400;color:#64748b">/mo</span></div><div class="compare-sub">Interest: '+fmt(r.a.totalInterest)+'</div></div><div class="compare-card'+(r.cheaper==='b'?' winner':'')+'"><div class="compare-title">'+r.b.label+(r.cheaper==='b'?' ✅':'')+'</div><div class="compare-emi">'+fmt(r.b.emi)+'<span style="font-size:10px;font-weight:400;color:#64748b">/mo</span></div><div class="compare-sub">Interest: '+fmt(r.b.totalInterest)+'</div></div></div>';if(r.savings>0)html+='<div class="hint-box">💰 '+(r.cheaper==='a'?r.a.label:r.b.label)+' saves '+fmt(r.savings)+' in total interest</div>';break;}
+    case'prepay':{const r=prepay(p.params.P,p.params.R,p.params.N,p.params.amt,12);html='<div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.5px">Prepayment Impact</div><div class="stat-grid"><div class="stat-card accent"><div class="stat-val">'+fmt(r.interestSaved)+'</div><div class="stat-lbl">Interest Saved</div></div><div class="stat-card"><div class="stat-val">'+r.monthsSaved+'</div><div class="stat-lbl">Months Saved</div></div><div class="stat-card"><div class="stat-val">'+fmt(r.prepay)+'</div><div class="stat-lbl">Prepay Amount</div></div></div>';break;}
+    case'compare_help':html='To compare, tell me two options:\n• <i>"Compare 10.5% vs 14% on 5 lakh for 3 years"</i>\n• <i>"Compare 3 year vs 5 year on 10 lakh at 12%"</i>';break;
+    default:html='I didn\'t quite catch that. Try:\n• <i>"5 lakh personal loan at 12% for 3 years"</i>\n• <i>"FD 10 lakh at 7.5% for 5 years"</i>\n• <i>"How much loan on 50000 salary"</i>';
+  }
+  setTimeout(()=>addAI(html),150);
+}
+</script>
+</body>
+</html>
