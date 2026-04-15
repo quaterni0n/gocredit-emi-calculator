@@ -52,7 +52,7 @@ India's first **AI-powered EMI calculator** with natural language support. Calcu
 
 ```bash
 # Clone
-git clone https://github.com/user/gocredit-emi-calculator.git
+git clone https://github.com/quaterni0n/gocredit-emi-calculator.git
 cd gocredit-emi-calculator
 
 # Serve locally
